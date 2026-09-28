@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d71920">
+<title>Faysal Pharmacy</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--red:#d71920;--red2:#ef3036;--green:#087443;--ink:#142238;--muted:#68707b;--bg:#f7f7f7;--line:#e8e8e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+button,input{font:inherit}button{cursor:pointer}
+.app{max-width:620px;margin:auto;min-height:100vh;background:#fff}
+.header{padding:20px 18px 14px;text-align:center;border-bottom:1px solid var(--line)}
+.logo{width:74px;height:74px;object-fit:contain;border-radius:50%;display:block;margin:0 auto 8px}
+.brand{font-size:24px;font-weight:900;letter-spacing:.4px;color:var(--red)}
+.tagline{margin-top:2px;color:#666;font-size:14px}
+.content{padding:16px 14px 92px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{border-radius:18px;padding:16px 14px;display:flex;align-items:center;gap:12px;border:1px solid var(--line)}
+.stat.ended{background:#fff0f0}.stat.loose{background:#fff7e7}
+.statIcon{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:27px;font-weight:800;flex:none}
+.ended .statIcon{background:var(--red)}.loose .statIcon{background:#e99a00}
+.statLabel{font-weight:800;font-size:13px;text-transform:uppercase}.statNum{font-size:26px;font-weight:900;margin-top:1px}
+.add{width:100%;margin:14px 0;border:0;border-radius:17px;padding:17px;background:var(--red);color:#fff;font-weight:900;font-size:17px;box-shadow:0 5px 14px #d7192024}
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:#eee;border-radius:16px;padding:3px;margin-bottom:12px}
+.tab{border:0;background:transparent;border-radius:13px;padding:12px 8px;font-weight:800;color:#666}.tab.active{background:var(--red);color:#fff}
+.card{position:relative;border:1px solid var(--line);border-radius:17px;padding:15px 14px 14px;margin:10px 0;box-shadow:0 2px 8px #00000008;overflow:hidden}
+.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--red)}
+.card.loose:before{background:#f2a500}
+.med{font-size:18px;font-weight:900;padding-right:105px}.company,.dist,.date{color:var(--muted);margin-top:5px;font-size:14px}
+.badge{position:absolute;right:12px;top:13px;border-radius:20px;padding:7px 10px;font-size:12px;font-weight:900;background:#ffe2e3;color:var(--red)}
+.badge.loose{background:#fff0cc;color:#b06b00}
+.order{margin-top:12px;width:100%;border:0;border-radius:12px;background:var(--red);color:#fff;padding:12px;font-weight:900}
+.order.done{background:#198754}
+.empty{text-align:center;color:#777;padding:36px 10px}
+.footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px max(10px,env(safe-area-inset-bottom));z-index:10}
+.footerInner{max-width:620px;margin:auto;display:flex;justify-content:center;color:#fff;background:var(--red);border-radius:14px;padding:12px;font-weight:800;font-size:14px}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:30;align-items:flex-end;justify-content:center}.modal.show{display:flex}
+.sheet{width:min(620px,100%);background:#fff;border-radius:22px 22px 0 0;padding:20px 16px 28px}
+.sheet h2{margin:0 0 14px}.field{margin:10px 0}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}.field input{width:100%;border:1px solid #ddd;border-radius:12px;padding:12px;outline:none}.field input:focus{border-color:var(--red)}
+.typeRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.typeBtn{border:1px solid #ddd;background:#fff;border-radius:12px;padding:12px;font-weight:800}.typeBtn.active{border-color:var(--red);background:#fff0f0;color:var(--red)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.cancel{border:1px solid #ddd;background:#fff;border-radius:12px;padding:13px;font-weight:800}.save{border:0;background:var(--red);color:#fff;border-radius:12px;padding:13px;font-weight:900}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#17202d;color:#fff;padding:10px 14px;border-radius:10px;font-size:13px;display:none;z-index:50}.toast.show{display:block}
+@media(min-width:621px){body{padding:20px 0}.app{border-radius:22px;overflow:hidden;box-shadow:0 10px 40px #00000012}.footer{left:50%;right:auto;transform:translateX(-50%);width:620px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header">
+  <img class="logo" src="faysal-pharmacy-logo.png" alt="Faysal Pharmacy logo">
+  <div class="brand">FAYSAL PHARMACY</div>
+  <div class="tagline">Care beyond medicine</div>
+</header>
+
+<main class="content">
+  <section class="stats">
+    <div class="stat ended"><div class="statIcon">×</div><div><div class="statLabel">Ended</div><div id="endedCount" class="statNum">0</div></div></div>
+    <div class="stat loose"><div class="statIcon">◉</div><div><div class="statLabel">Loose Pack</div><div id="looseCount" class="statNum">0</div></div></div>
+  </section>
+
+  <button class="add" onclick="openModal()">＋ &nbsp; ADD DEMAND</button>
+
+  <div class="tabs">
+    <button id="needTab" class="tab active" onclick="setFilter('pending')">Need to Order <span id="pendingCount">(0)</span></button>
+    <button id="orderedTab" class="tab" onclick="setFilter('ordered')">Ordered <span id="orderedCount">(0)</span></button>
+  </div>
+
+  <div id="list"></div>
+</main>
+
+<footer class="footer"><div class="footerInner">📍 Multan Road, Abdul Hakim</div></footer>
+</div>
+
+<div id="modal" class="modal">
+ <div class="sheet">
+  <h2>Add Demand</h2>
+  <div class="field"><label>Medicine name</label><input id="medicine" autocomplete="off" placeholder="e.g. Panadol 500mg"></div>
+  <div class="field"><label>Company</label><input id="company" autocomplete="off" placeholder="e.g. GSK"></div>
+  <div class="field"><label>Distributor</label><input id="distributor" autocomplete="off" placeholder="e.g. ABC Distributor"></div>
+  <div class="field"><label>Date</label><input id="date" type="date"></div>
+  <div class="field"><label>Type</label><div class="typeRow"><button id="endedBtn" class="typeBtn active" onclick="chooseType('ended')">Ended</button><button id="looseBtn" class="typeBtn" onclick="chooseType('loose_pack')">Loose Pack Only</button></div></div>
+  <div class="actions"><button class="cancel" onclick="closeModal()">Cancel</button><button class="save" onclick="saveDemand()">Save Demand</button></div>
+ </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* Supabase settings.
+   Put the URL and anon key from:
+   Supabase → Project Settings → API.
+*/
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const TABLE = "demand_requests";
+
+let client = null;
+let demands = [];
+let currentFilter = "pending";
+let selectedType = "ended";
+
+function readyForSupabase(){
+  return !SUPABASE_URL.includes("PASTE_") && !SUPABASE_ANON_KEY.includes("PASTE_");
+}
+if(readyForSupabase()) client = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+function today(){return new Date().toISOString().slice(0,10)}
+function chooseType(type){
+  selectedType=type;
+  document.getElementById("endedBtn").classList.toggle("active",type==="ended");
+  document.getElementById("looseBtn").classList.toggle("active",type==="loose_pack");
+}
+function openModal(){
+  document.getElementById("modal").classList.add("show");
+  document.getElementById("date").value=today();
+  setTimeout(()=>document.getElementById("medicine").focus(),100);
+}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+function setFilter(filter){
+  currentFilter=filter;
+  document.getElementById("needTab").classList.toggle("active",filter==="pending");
+  document.getElementById("orderedTab").classList.toggle("active",filter==="ordered");
+  render();
+}
+async function load(){
+  if(!client){loadDemo();return}
+  const {data,error}=await client.from(TABLE).select("*").order("created_at",{ascending:false});
+  if(error){toast("Could not load records");console.error(error);return}
+  demands=data||[];render();
+}
+function loadDemo(){
+  demands=[];
+  render();
+}
+async function saveDemand(){
+  const medicine=document.getElementById("medicine").value.trim();
+  const company=document.getElementById("company").value.trim();
+  const distributor=document.getElementById("distributor").value.trim();
+  const date=document.getElementById("date").value||today();
+  if(!medicine||!company||!distributor){toast("Please fill all fields");return}
+  const row={medicine_name:medicine,company,distributor,demand_type:selectedType,status:"pending",created_at:new Date(date+"T12:00:00").toISOString()};
+  if(client){
+    const {data,error}=await client.from(TABLE).insert(row).select().single();
+    if(error){toast("Could not save demand");console.error(error);return}
+    demands.unshift(data);
+  }else{
+    demands.unshift({id:crypto.randomUUID(),...row});
+  }
+  closeModal();
+  ["medicine","company","distributor"].forEach(id=>document.getElementById(id).value="");
+  toast("Demand added");
+  render();
+}
+async function orderNow(id){
+  if(client){
+    const {error}=await client.from(TABLE).update({status:"ordered",ordered_at:new Date().toISOString()}).eq("id",id);
+    if(error){toast("Could not update order");console.error(error);return}
+  }
+  const x=demands.find(d=>d.id===id);if(x){x.status="ordered";x.ordered_at=new Date().toISOString()}
+  toast("Marked as ordered");
+  render();
+}
+function labelType(type){return type==="loose_pack"?"Loose Pack Only":"Ended"}
+function formatDate(v){
+  if(!v)return "";
+  const d=new Date(v);return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+}
+function render(){
+  const pending=demands.filter(x=>x.status==="pending");
+  const ordered=demands.filter(x=>x.status==="ordered");
+  document.getElementById("endedCount").textContent=demands.filter(x=>x.demand_type==="ended"&&x.status==="pending").length;
+  document.getElementById("looseCount").textContent=demands.filter(x=>x.demand_type==="loose_pack"&&x.status==="pending").length;
+  document.getElementById("pendingCount").textContent="("+pending.length+")";
+  document.getElementById("orderedCount").textContent="("+ordered.length+")";
+  const rows=(currentFilter==="pending"?pending:ordered);
+  const list=document.getElementById("list");
+  if(!rows.length){list.innerHTML='<div class="empty">No records here yet.</div>';return}
+  list.innerHTML=rows.map(x=>`
+    <article class="card ${x.demand_type==="loose_pack"?"loose":""}">
+      <span class="badge ${x.demand_type==="loose_pack"?"loose":""}">${labelType(x.demand_type)}</span>
+      <div class="med">${escapeHtml(x.medicine_name)}</div>
+      <div class="company">${escapeHtml(x.company)}</div>
+      <div class="dist">${escapeHtml(x.distributor)}</div>
+      <div class="date">📅 ${formatDate(x.created_at)}</div>
+      <button class="order ${x.status==="ordered"?"done":""}" ${x.status==="ordered"?"disabled":""} onclick="orderNow('${x.id}')">
+        ${x.status==="ordered"?"✓ ORDERED":"✓ ORDERED NOW"}
+      </button>
+    </article>`).join("");
+}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+load();
+setInterval(load,15000);
+</script>
+</body>
+</html>
